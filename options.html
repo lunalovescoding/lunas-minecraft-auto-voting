@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Auto-Vote Settings</title>
+  <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo-section">
+        <div class="logo">AV</div>
+        <h1>Auto-Vote Extension</h1>
+      </div>
+      <div class="version">v1.0.0</div>
+    </header>
+
+    <nav class="tabs">
+      <button class="tab-btn active" data-tab="projects">Projects</button>
+      <button class="tab-btn" data-tab="add">Add Project</button>
+      <button class="tab-btn" data-tab="settings">Settings</button>
+      <button class="tab-btn" data-tab="about">About</button>
+    </nav>
+
+    <!-- Projects Tab -->
+    <div class="tab-content active" id="projects-tab">
+      <div class="section">
+        <h2>Your Projects</h2>
+        <div id="projectsContainer">
+          <div class="empty-state">
+            <p>No projects added yet. Click "Add Project" to get started!</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add Project Tab -->
+    <div class="tab-content" id="add-tab">
+      <div class="section">
+        <h2>Add New Project</h2>
+        <form id="addProjectForm">
+          <div class="form-group">
+            <label for="projectName">Project Name *</label>
+            <input type="text" id="projectName" placeholder="My Minecraft Server" required>
+            <small>A friendly name for your server</small>
+          </div>
+
+          <div class="form-group">
+            <label for="username">Username *</label>
+            <input type="text" id="username" placeholder="YourMinecraftUsername" required>
+            <small>Your in-game username</small>
+          </div>
+
+          <div class="form-group">
+            <label for="voteUrl">Voting URL *</label>
+            <input type="url" id="voteUrl" placeholder="https://minecraft-mp.com/server/12345/vote/" required>
+            <small>The full URL to the voting page</small>
+          </div>
+
+          <div class="form-group">
+            <label for="voteInterval">Vote Interval (hours)</label>
+            <input type="number" id="voteInterval" value="24" min="1" max="168">
+            <small>Time between automatic votes (default: 24 hours)</small>
+          </div>
+
+          <div class="form-group checkbox">
+            <input type="checkbox" id="autoVote" checked>
+            <label for="autoVote">Enable automatic voting</label>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Add Project</button>
+            <button type="button" class="btn btn-secondary" id="cancelBtn">Clear Form</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Settings Tab -->
+    <div class="tab-content" id="settings-tab">
+      <div class="section">
+        <h2>General Settings</h2>
+        
+        <div class="form-group checkbox">
+          <input type="checkbox" id="notificationsEnabled" checked>
+          <label for="notificationsEnabled">Enable notifications</label>
+        </div>
+
+        <div class="form-group checkbox">
+          <input type="checkbox" id="autoVoteOnVisit" checked>
+          <label for="autoVoteOnVisit">Auto-vote when visiting vote pages</label>
+        </div>
+
+        <div class="form-group checkbox">
+          <input type="checkbox" id="captchaWarnings" checked>
+          <label for="captchaWarnings">Warn when captcha is detected</label>
+        </div>
+
+        <div class="form-group">
+          <label>Statistics</label>
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-value" id="totalVotes">0</div>
+              <div class="stat-label">Total Votes</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" id="todayVotes">0</div>
+              <div class="stat-label">Today</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" id="weekVotes">0</div>
+              <div class="stat-label">This Week</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn btn-secondary" id="resetStatsBtn">Reset Statistics</button>
+          <button class="btn btn-danger" id="clearAllBtn">Clear All Data</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- About Tab -->
+    <div class="tab-content" id="about-tab">
+      <div class="section">
+        <h2>About</h2>
+        <p>Auto-Vote Extension helps you automatically vote for your Minecraft servers on various listing sites.</p>
+        
+        <h3>Supported Sites</h3>
+        <ul class="supported-sites">
+          <li>minecraft-mp.com</li>
+          <li>minecraftservers.org</li>
+          <li>minecraft-server-list.com</li>
+          <li>minecraft-server.net</li>
+        </ul>
+
+        <h3>How to Use</h3>
+        <ol>
+          <li>Add your server by going to the "Add Project" tab</li>
+          <li>Enter your server name, username, and voting URL</li>
+          <li>The extension will automatically vote when you visit voting pages</li>
+          <li>You can also manually trigger votes from the popup</li>
+        </ol>
+
+        <h3>Privacy</h3>
+        <p>All your data is stored locally in your browser. We don't collect or send any information to external servers.</p>
+
+        <div class="links">
+          <a href="https://github.com/yourusername/auto-vote-extension" target="_blank" class="btn btn-secondary">GitHub Repository</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="notification" class="notification"></div>
+  
+  <script src="scripts/options.js"></script>
+</body>
+</html>
