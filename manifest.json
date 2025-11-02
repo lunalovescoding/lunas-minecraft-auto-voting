@@ -1,0 +1,55 @@
+{
+  "manifest_version": 3,
+  "name": "Auto-Vote Extension",
+  "version": "1.0.0",
+  "description": "Automatic voting on server listing sites for game servers",
+  "default_locale": "en",
+  "permissions": [
+    "storage",
+    "alarms",
+    "notifications"
+  ],
+  "host_permissions": [
+    "*://*.minecraft-mp.com/*",
+    "*://*.minecraftservers.org/*",
+    "*://*.minecraft-server-list.com/*",
+    "*://*.minecraft-server.net/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "images/icons/icon16.png",
+      "48": "images/icons/icon48.png",
+      "128": "images/icons/icon128.png"
+    }
+  },
+  "options_page": "options.html",
+  "background": {
+    "service_worker": "scripts/background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.minecraft-mp.com/*/vote/*",
+        "*://*.minecraftservers.org/vote/*",
+        "*://*.minecraft-server-list.com/server/*/vote/",
+        "*://*.minecraft-server.net/vote-*"
+      ],
+      "js": [
+        "scripts/main/api.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "icons": {
+    "16": "images/icons/icon16.png",
+    "48": "images/icons/icon48.png",
+    "128": "images/icons/icon128.png"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["images/*"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
