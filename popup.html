@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Auto-Vote</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      width: 350px;
+      padding: 15px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+      background: #f8f9fa;
+      color: #333;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 15px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid #e9ecef;
+    }
+    .logo {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 8px;
+      margin-right: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 18px;
+    }
+    h1 {
+      font-size: 18px;
+      font-weight: 600;
+      color: #2c3e50;
+    }
+    .stats {
+      background: white;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .stat-row:last-child {
+      border-bottom: none;
+    }
+    .stat-label {
+      color: #6c757d;
+      font-size: 13px;
+    }
+    .stat-value {
+      font-weight: 600;
+      color: #667eea;
+      font-size: 14px;
+    }
+    .button {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-bottom: 8px;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+    .btn-secondary {
+      background: white;
+      color: #667eea;
+      border: 2px solid #667eea;
+    }
+    .btn-secondary:hover {
+      background: #f8f9ff;
+    }
+    .projects-list {
+      max-height: 200px;
+      overflow-y: auto;
+      margin-bottom: 12px;
+    }
+    .project-item {
+      background: white;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      border-radius: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .project-name {
+      font-size: 13px;
+      font-weight: 500;
+      color: #2c3e50;
+    }
+    .project-status {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #28a745;
+    }
+    .project-status.inactive {
+      background: #dc3545;
+    }
+    .empty-state {
+      text-align: center;
+      padding: 30px;
+      color: #6c757d;
+      font-size: 13px;
+    }
+    .footer {
+      text-align: center;
+      font-size: 11px;
+      color: #adb5bd;
+      margin-top: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">AV</div>
+    <h1>Auto-Vote</h1>
+  </div>
+
+  <div class="stats">
+    <div class="stat-row">
+      <span class="stat-label">Active Projects</span>
+      <span class="stat-value" id="activeProjects">0</span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">Total Votes Today</span>
+      <span class="stat-value" id="todayVotes">0</span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">Next Vote</span>
+      <span class="stat-value" id="nextVote">-</span>
+    </div>
+  </div>
+
+  <div class="projects-list" id="projectsList">
+    <div class="empty-state">
+      No projects added yet.<br>Click "Manage Projects" to add one.
+    </div>
+  </div>
+
+  <button class="button btn-primary" id="manageBtn">Manage Projects</button>
+  <button class="button btn-secondary" id="voteNowBtn">Vote Now</button>
+
+  <div class="footer">
+    v1.0.0 | Made for server owners
+  </div>
+
+  <script src="scripts/popup.js"></script>
+</body>
+</html>
