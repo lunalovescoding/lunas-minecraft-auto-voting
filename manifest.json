@@ -3,7 +3,6 @@
   "name": "Auto-Vote Extension",
   "version": "1.0.0",
   "description": "Automatic voting on server listing sites for game servers",
-  "default_locale": "en",
   "permissions": [
     "storage",
     "alarms",
