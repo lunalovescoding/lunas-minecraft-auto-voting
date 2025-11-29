@@ -49,7 +49,7 @@ function calculateNextVote(projects) {
   
   projects.forEach(project => {
     if (project.enabled && project.lastVote) {
-      const nextTime = project.lastVote + (project.interval || 86400000); // Default 24 hours
+      const nextTime = project.lastVote + (project.interval || 86400000);
       if (nextTime < nextVoteTime && nextTime > now) {
         nextVoteTime = nextTime;
       }
@@ -79,22 +79,59 @@ document.getElementById('manageBtn').addEventListener('click', () => {
 
 document.getElementById('voteNowBtn').addEventListener('click', async () => {
   const btn = document.getElementById('voteNowBtn');
+  const originalText = btn.textContent;
   btn.textContent = 'Voting...';
   btn.disabled = true;
   
   try {
-    await chrome.runtime.sendMessage({ action: 'voteAll' });
-    btn.textContent = 'Done!';
+    // Get all active projects that can vote
+    const data = await chrome.storage.local.get(['projects']);
+    const projects = data.projects || [];
+    
+    const activeProjects = projects.filter(p => {
+      if (!p.enabled) return false;
+      if (!p.lastVote) return true;
+      const now = Date.now();
+      const nextVoteTime = p.lastVote + p.interval;
+      return now >= nextVoteTime;
+    });
+    
+    console.log('Active projects ready to vote:', activeProjects.length);
+    
+    if (activeProjects.length === 0) {
+      btn.textContent = 'No projects ready';
+      setTimeout(() => {
+        btn.textContent = originalText;
+        btn.disabled = false;
+      }, 2000);
+      return;
+    }
+    
+    // Open tabs for each project
+    for (const project of activeProjects) {
+      console.log('Opening tab for:', project.name, project.url);
+      await chrome.tabs.create({
+        url: project.url,
+        active: false
+      });
+      
+      // Wait 2 seconds between opening tabs
+      await new Promise(resolve => setTimeout(resolve, 2000));
+    }
+    
+    btn.textContent = `Opened ${activeProjects.length} tabs!`;
     setTimeout(() => {
-      btn.textContent = 'Vote Now';
+      btn.textContent = originalText;
       btn.disabled = false;
-      loadStats();
-    }, 1500);
+      window.close(); // Close popup
+    }, 2000);
+    
   } catch (error) {
-    btn.textContent = 'Error';
+    console.error('Error in voteNowBtn:', error);
+    btn.textContent = 'Error!';
     setTimeout(() => {
-      btn.textContent = 'Vote Now';
+      btn.textContent = originalText;
       btn.disabled = false;
-    }, 1500);
+    }, 2000);
   }
 });
