@@ -3,7 +3,10 @@
 (async function() {
   'use strict';
   
-  console.log('[Auto-Vote] Content script loaded');
+  console.log('[Auto-Vote] Content script loaded on:', window.location.href);
+  
+  // Wait for page to fully load
+  await waitForPageLoad();
   
   // Check if auto-vote is enabled
   const settings = await getSettings();
@@ -30,6 +33,11 @@
     return;
   }
   
+  // Add random delay before attempting vote (looks more human)
+  const randomDelay = 2000 + Math.random() * 3000; // 2-5 seconds
+  console.log('[Auto-Vote] Waiting', Math.round(randomDelay/1000), 'seconds before voting...');
+  await delay(randomDelay);
+  
   // Detect site and execute voting
   const hostname = window.location.hostname;
   console.log('[Auto-Vote] Attempting to vote on:', hostname);
@@ -40,6 +48,16 @@
     console.error('[Auto-Vote] Error:', error);
   }
 })();
+
+function waitForPageLoad() {
+  return new Promise((resolve) => {
+    if (document.readyState === 'complete') {
+      resolve();
+    } else {
+      window.addEventListener('load', resolve);
+    }
+  });
+}
 
 async function getSettings() {
   return new Promise((resolve) => {
@@ -59,17 +77,40 @@ async function getCurrentProject() {
       const projects = data.projects || [];
       const currentUrl = window.location.href;
       
+      console.log('[Auto-Vote] Checking URL:', currentUrl);
+      console.log('[Auto-Vote] Against projects:', projects.length);
+      
       // Find project matching current URL
       const project = projects.find(p => {
         try {
+          // More flexible URL matching
           const projectUrl = new URL(p.url);
           const currentUrlObj = new URL(currentUrl);
-          return projectUrl.hostname === currentUrlObj.hostname &&
-                 currentUrlObj.pathname.includes(projectUrl.pathname.split('/')[2]); // Match server ID
-        } catch {
+          
+          // Check if hostnames match
+          if (projectUrl.hostname !== currentUrlObj.hostname) {
+            return false;
+          }
+          
+          // Extract server ID from path
+          const projectPath = projectUrl.pathname;
+          const currentPath = currentUrlObj.pathname;
+          
+          // Check if current path contains the project path
+          const match = currentPath.includes(projectPath) || 
+                       projectPath.includes(currentPath.split('?')[0]);
+          
+          console.log('[Auto-Vote] Comparing:', projectPath, 'with', currentPath, '=', match);
+          return match;
+        } catch (e) {
+          console.error('[Auto-Vote] URL comparison error:', e);
           return false;
         }
       });
+      
+      if (project) {
+        console.log('[Auto-Vote] Matched project:', project.name);
+      }
       
       resolve(project);
     });
@@ -105,6 +146,7 @@ async function executeSiteVote(hostname, project) {
   } else if (hostname.includes('minecraft-server.net')) {
     await voteMinecraftServerNet(project);
   } else {
+    console.log('[Auto-Vote] Unknown site, trying generic vote');
     await voteGeneric(project);
   }
 }
@@ -116,10 +158,16 @@ function detectCaptcha() {
     'iframe[src*="hcaptcha"]',
     '.g-recaptcha',
     '.h-captcha',
-    '#captcha'
+    '#captcha',
+    '[class*="captcha"]',
+    '[id*="captcha"]'
   ];
   
-  return captchaSelectors.some(selector => document.querySelector(selector));
+  const hasCaptcha = captchaSelectors.some(selector => document.querySelector(selector));
+  if (hasCaptcha) {
+    console.log('[Auto-Vote] Captcha detected on page');
+  }
+  return hasCaptcha;
 }
 
 // Site-specific voting functions
@@ -127,71 +175,92 @@ function detectCaptcha() {
 async function voteMinecraftMp(project) {
   console.log('[Auto-Vote] Executing minecraft-mp.com vote');
   
-  // Wait for page to load
-  await waitForElement('.vote-button, button[type="submit"], input[type="submit"]', 5000);
-  
-  const voteButton = document.querySelector('.vote-button') ||
-                     document.querySelector('button[type="submit"]') ||
-                     document.querySelector('input[type="submit"]');
+  // Wait for vote button with longer timeout
+  const voteButton = await waitForElement(
+    'button[type="submit"], input[type="submit"], .vote-button, button.btn-primary, a[href*="vote"]',
+    10000
+  );
   
   if (voteButton) {
-    console.log('[Auto-Vote] Found vote button, clicking...');
+    console.log('[Auto-Vote] Found vote button:', voteButton.tagName, voteButton.className);
     await delay(1000);
+    
+    // Scroll into view first
+    voteButton.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    await delay(500);
+    
+    // Try clicking
     voteButton.click();
+    console.log('[Auto-Vote] Clicked vote button');
+    
     await updateProjectVote(project);
     showNotification('✓ Vote submitted successfully!', 'success');
   } else {
     console.log('[Auto-Vote] Vote button not found');
+    showNotification('⚠️ Could not find vote button', 'warning');
   }
 }
 
 async function voteMinecraftServersOrg(project) {
   console.log('[Auto-Vote] Executing minecraftservers.org vote');
   
-  await waitForElement('button.vote-button, input[type="submit"]', 5000);
-  
-  const voteButton = document.querySelector('button.vote-button') ||
-                     document.querySelector('input[type="submit"]');
+  const voteButton = await waitForElement(
+    'button[type="submit"], input[type="submit"], .vote-button, button.btn, a.btn',
+    10000
+  );
   
   if (voteButton) {
+    console.log('[Auto-Vote] Found vote button');
+    voteButton.scrollIntoView({ behavior: 'smooth', block: 'center' });
     await delay(1000);
     voteButton.click();
     await updateProjectVote(project);
     showNotification('✓ Vote submitted!', 'success');
+  } else {
+    console.log('[Auto-Vote] Vote button not found');
+    showNotification('⚠️ Could not find vote button', 'warning');
   }
 }
 
 async function voteMinecraftServerList(project) {
   console.log('[Auto-Vote] Executing minecraft-server-list.com vote');
   
-  await waitForElement('button.vote-btn, button[type="submit"], input[type="submit"]', 5000);
-  
-  const voteButton = document.querySelector('button.vote-btn') ||
-                     document.querySelector('button[type="submit"]') ||
-                     document.querySelector('input[type="submit"]');
+  const voteButton = await waitForElement(
+    'button[type="submit"], input[type="submit"], .vote-btn, button.btn, a.vote',
+    10000
+  );
   
   if (voteButton) {
+    console.log('[Auto-Vote] Found vote button');
+    voteButton.scrollIntoView({ behavior: 'smooth', block: 'center' });
     await delay(1000);
     voteButton.click();
     await updateProjectVote(project);
     showNotification('✓ Vote submitted!', 'success');
+  } else {
+    console.log('[Auto-Vote] Vote button not found');
+    showNotification('⚠️ Could not find vote button', 'warning');
   }
 }
 
 async function voteMinecraftServerNet(project) {
   console.log('[Auto-Vote] Executing minecraft-server.net vote');
   
-  await waitForElement('button.btn-vote, button[type="submit"], input[type="submit"]', 5000);
-  
-  const voteButton = document.querySelector('button.btn-vote') ||
-                     document.querySelector('button[type="submit"]') ||
-                     document.querySelector('input[type="submit"]');
+  const voteButton = await waitForElement(
+    'button[type="submit"], input[type="submit"], .btn-vote, button.btn, a[href*="vote"]',
+    10000
+  );
   
   if (voteButton) {
+    console.log('[Auto-Vote] Found vote button');
+    voteButton.scrollIntoView({ behavior: 'smooth', block: 'center' });
     await delay(1000);
     voteButton.click();
     await updateProjectVote(project);
     showNotification('✓ Vote submitted!', 'success');
+  } else {
+    console.log('[Auto-Vote] Vote button not found');
+    showNotification('⚠️ Could not find vote button', 'warning');
   }
 }
 
@@ -204,13 +273,16 @@ async function voteGeneric(project) {
     'input[type="submit"]',
     'button.vote',
     'button.btn-vote',
-    'a.vote-button'
+    'a.vote-button',
+    'button.btn-primary',
+    'a[href*="vote"]'
   ];
   
   for (const selector of selectors) {
     const button = document.querySelector(selector);
-    if (button && button.offsetParent !== null) { // Check if visible
+    if (button && button.offsetParent !== null) {
       console.log('[Auto-Vote] Found vote button:', selector);
+      button.scrollIntoView({ behavior: 'smooth', block: 'center' });
       await delay(1000);
       button.click();
       await updateProjectVote(project);
@@ -220,21 +292,26 @@ async function voteGeneric(project) {
   }
   
   console.log('[Auto-Vote] No vote button found');
+  showNotification('⚠️ Could not find vote button', 'warning');
 }
 
 // Helper functions
 
-function waitForElement(selector, timeout = 5000) {
-  return new Promise((resolve, reject) => {
+function waitForElement(selector, timeout = 10000) {
+  return new Promise((resolve) => {
     const element = document.querySelector(selector);
     if (element) {
+      console.log('[Auto-Vote] Element found immediately:', selector);
       resolve(element);
       return;
     }
     
+    console.log('[Auto-Vote] Waiting for element:', selector);
+    
     const observer = new MutationObserver((mutations, obs) => {
       const element = document.querySelector(selector);
       if (element) {
+        console.log('[Auto-Vote] Element found after mutation:', selector);
         obs.disconnect();
         resolve(element);
       }
@@ -246,6 +323,7 @@ function waitForElement(selector, timeout = 5000) {
     });
     
     setTimeout(() => {
+      console.log('[Auto-Vote] Timeout waiting for:', selector);
       observer.disconnect();
       resolve(null);
     }, timeout);
